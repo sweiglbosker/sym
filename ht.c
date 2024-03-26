@@ -17,16 +17,16 @@
 #define EMPTY(e) (((HtEntry)e).key == NULL)
 #define OCCUPIED(e) (!EMPTY(e))
 
-static uint64_t hash(char *s);
+static uint64_t hash(const char *s);
 bool ht_expand(Ht *ht);
 
 static inline bool occupied(HtEntry e) {
 	return (e.key != NULL);
 }
 
-static uint64_t hash(char *s) { // (fnv1a)
+static uint64_t hash(const char *s) { // (fnv1a)
 	uint64_t hash = FNV_OFFSET_BASIS; 
-	for (char *c = s; *c != '\0'; c++) {
+	for (char *c = (char *)s; *c != '\0'; c++) {
 		hash ^= (uint64_t)(*c);		
 		hash *= FNV_PRIME;
 	}
@@ -88,7 +88,7 @@ bool ht_expand(Ht *ht) {
 	return true;
 }
 
-void _ht_bind(Ht *ht, char *key, void *val) {
+void _ht_bind(Ht *ht, const char *key, void *val) {
 	uint64_t hashed_key = hash(key) % (ht->cap - 1);
 	
 	while (ht->table[hashed_key].key) {
@@ -97,18 +97,18 @@ void _ht_bind(Ht *ht, char *key, void *val) {
 		if (++hashed_key >= ht->cap) 
 			hashed_key = 0;
 	}
-	ht->table[hashed_key].key = key;
+	ht->table[hashed_key].key = (char*)key;
 	ht->table[hashed_key].val = val;
 }
 
-void ht_bind(Ht *ht, char *key, void *val) {
+void ht_bind(Ht *ht, const char *key, void *val) {
 	if (ht->n >= ht->cap / 2) 
 		ht_expand(ht);
 
 	_ht_bind(ht, key, val);
 }
 
-void *ht_lookup(Ht *ht, char *key) {
+void *ht_lookup(Ht *ht, const char *key) {
 	// s
 	uint64_t hashed_key = hash(key) % (ht->cap - 1); 
 	

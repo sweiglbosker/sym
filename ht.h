@@ -17,7 +17,7 @@ typedef struct _ht {
 Ht *ht_new();
 void ht_free(Ht *ht);
 
-void ht_bind(Ht *ht, char *key, void *val);
-void *ht_lookup(Ht *ht, char *key);
+void ht_bind(Ht *ht, const char *key, void *val);
+void *ht_lookup(Ht *ht, const char *key);
 
 #endif
