@@ -92,21 +92,6 @@ bool ht_expand(Ht *ht) {
 	return true;
 }
 
-// allocates and inserts head node. el can be NULL
-HtEntryList *El(HtEntryList *el, const char *key, void *val) {
-	HtEntryList *r = calloc(1, sizeof(HtEntryList));
-
-	size_t keylen = strlen(key); 
-
-	r->next = el;
-	r->entry.key = calloc(keylen + 1, sizeof(char));
-	strcpy(r->entry.key, key);
-	r->entry.val = val;
-
-
-	return r;
-}
-
 void _ht_bind(Ht *ht, const char *key, void *val) {
 	uint64_t hashed_key = hash(key) % (ht->cap - 1);
 	size_t keylen = strlen(key);

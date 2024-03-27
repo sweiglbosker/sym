@@ -61,11 +61,7 @@ void symboltable_free(SymbolTable *st) {
 }
 
 void symboltable_bind(SymbolTable *st, Binding *binding) {
-	BindingList *bl = ht_lookup(st->ht, binding->ident);
-
-	if (!bl) {
-		ht_bind(st->ht, binding->ident, binding->var);
-	}
+	ht_bind(st->ht, binding->ident, binding->var);
 
 	stack_push(st->stack, binding);
 }

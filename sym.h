@@ -21,11 +21,6 @@ typedef struct {
 	Var *var;
 } Binding;
 
-typedef struct BindingList {
-	Binding *b;
-	struct BindingList *next;
-} BindingList;
-
 SymbolTable *symboltable_new(void);
 void symboltable_free(SymbolTable *table);
 
