@@ -1,2 +1,7 @@
 sym: main.c sym.c ht.c stack.c
-	${CC} -o $@ $^
+	${CC} -g -o $@ $^
+
+clean:
+	rm -rf sym
+
+.PHONY: clean

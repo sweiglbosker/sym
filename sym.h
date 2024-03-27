@@ -24,9 +24,10 @@ typedef struct {
 SymbolTable *symboltable_new(void);
 void symboltable_free(SymbolTable *table);
 
-Binding *mkbind(const char *indent, Var *var);
+Binding *mkbind(const char *ident, Var *var);
 void freebind(Binding *b);
 
+Var *mkvar(int type, void *val);
 void freevar(Var *v);
 
 Binding *mkscope(void);

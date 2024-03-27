@@ -149,6 +149,10 @@ void *ht_lookup(Ht *ht, const char *key) {
 	uint64_t hashed_key = hash(key) % (ht->cap - 1); 
 
 	HtEntryList *i = &ht->table[hashed_key];
+
+	if (i->entry.key == NULL) 
+		return NULL;
+
 	while (strcmp(i->entry.key, key)) {
 		if (i->next == NULL)
 			return NULL; 

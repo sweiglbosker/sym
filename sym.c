@@ -34,6 +34,15 @@ void freebind(Binding *b) {
 	free(b);
 }
 
+Var *mkvar(int type, void *val) {
+	Var *r = calloc(1, sizeof(Var));
+
+	r->type = type;
+	r->val = val;
+
+	return r;
+}
+
 void freevar(Var *v) {
 	if (v->type == TYPE_STRING) 
 		free(v->val);
@@ -49,7 +58,7 @@ SymbolTable *symboltable_new(void) {
 	st->stack = stack_new();
 	st->ht = ht_new();
 
-	stack_push(st->stack, mkscope());
+	scope_enter(st); // enter global scope
 
 	return st;
 }
