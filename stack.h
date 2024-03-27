@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #define STACK_CAP 256
 
@@ -14,6 +15,7 @@ typedef struct {
 
 Stack *stack_new(void);
 void stack_free(Stack *stack);
+bool stack_empty(Stack *stack);
 
 void stack_push(Stack *stack, void *item);
 void *stack_pop(Stack *stack);

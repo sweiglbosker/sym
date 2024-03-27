@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "stack.h"
@@ -9,6 +11,10 @@ Stack *stack_new(void) {
 	stack->top = 0;
 
 	return stack;
+}
+
+bool stack_empty(Stack *stack) {
+	return (stack->top == 0);
 }
 
 void stack_free(Stack *stack) {
