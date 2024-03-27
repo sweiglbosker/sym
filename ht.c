@@ -39,7 +39,7 @@ Ht *ht_new(void) {
 	if (ht == NULL)
 		return NULL;
 
-	ht->table = calloc(HT_CAPACITY, sizeof(struct _ht_entry) * HT_CAPACITY);
+	ht->table = calloc(HT_CAPACITY, sizeof(HtEntryList));
 
 	if (ht->table == NULL) {
 		free(ht);
@@ -54,7 +54,13 @@ Ht *ht_new(void) {
 
 void ht_free(Ht *ht) {
 	for (size_t i = 0; i < ht->cap; i++) {
-		free(ht->table[i].key);
+		HtEntryList *next = &ht->table[i];
+		while (next) { // free collisions
+			HtEntryList *tmp = next;
+			next = next->next;
+			if (tmp->entry.key)
+				free(tmp->entry.key);
+		}
 	}
 	free(ht->table);
 	free(ht);
@@ -62,25 +68,23 @@ void ht_free(Ht *ht) {
 
 bool ht_expand(Ht *ht) {
 	size_t newcap = ht->cap * 2;
-	HtEntry *oldtable = ht->table;
+	HtEntryList *oldtable = ht->table;
 
 	if (newcap <= ht->cap) // overflow
 		return 0;
 
 
-	void *newtable = calloc(newcap, sizeof(struct _ht_entry));
-	if (newtable)
+	void *newtable = calloc(newcap, sizeof(HtEntryList));
+	if (!newtable)
 		return false;
 
 	ht->table = newtable;
 	ht->cap = newcap;
 
 	for (size_t i = 0; i < (ht->cap/2) - 1; i++) {
-		HtEntry entry = oldtable[i];
-		if (OCCUPIED(entry)) {
-			ht_bind(ht, entry.key, entry.val);
-			oldtable[i].key = 0;
-			oldtable[i].val = 0;
+		HtEntryList el = oldtable[i];
+		if (OCCUPIED(el.entry)) {
+			ht_bind(ht, el.entry.key, el.entry.val);
 		}
 	}
 
@@ -88,17 +92,41 @@ bool ht_expand(Ht *ht) {
 	return true;
 }
 
+// allocates and inserts head node. el can be NULL
+HtEntryList *El(HtEntryList *el, const char *key, void *val) {
+	HtEntryList *r = calloc(1, sizeof(HtEntryList));
+
+	size_t keylen = strlen(key); 
+
+	r->next = el;
+	r->entry.key = calloc(keylen + 1, sizeof(char));
+	strcpy(r->entry.key, key);
+	r->entry.val = val;
+
+
+	return r;
+}
+
 void _ht_bind(Ht *ht, const char *key, void *val) {
 	uint64_t hashed_key = hash(key) % (ht->cap - 1);
+	size_t keylen = strlen(key);
 	
-	while (ht->table[hashed_key].key) {
-		if (!strcmp(key, ht->table[hashed_key].key)) // key already exists in the table but this is the correct entry to store
+	HtEntryList *i = &ht->table[hashed_key];
+	while (i->entry.key) { 
+		if (!strcmp(key, i->entry.key))
 			break;
-		if (++hashed_key >= ht->cap) 
-			hashed_key = 0;
+		if (i->next == NULL) {
+			i->next = calloc(1, sizeof(HtEntryList));
+		}
+		i = i->next;
 	}
-	ht->table[hashed_key].key = (char*)key;
-	ht->table[hashed_key].val = val;
+
+	if (i->entry.key == NULL) {
+		i->entry.key = calloc(keylen + 1, sizeof(char));
+		strcpy(i->entry.key, key);
+	}
+
+	i->entry.val = val;
 }
 
 void ht_bind(Ht *ht, const char *key, void *val) {
@@ -108,16 +136,38 @@ void ht_bind(Ht *ht, const char *key, void *val) {
 	_ht_bind(ht, key, val);
 }
 
-void *ht_lookup(Ht *ht, const char *key) {
-	// s
-	uint64_t hashed_key = hash(key) % (ht->cap - 1); 
+void ht_unbind(Ht *ht, const char *key) {
+	uint64_t hashed_key = hash(key) % (ht->cap - 1);
+	bool head = true; // we don't need to free from memory if node is not a collision/head of HtEntryList
+	//
+	HtEntryList *i = &ht->table[hashed_key];
+	HtEntryList *op = i;
 	
-	// TODO: this will hang if every entry in ht is occupied (i think) 
-	while (ht->table[hashed_key].key) {
-		if (!strcmp(key, ht->table[hashed_key].key)) 
-			return ht->table[hashed_key].val;
-		if (++hashed_key >= ht->cap)
-			hashed_key = 0;
+
+	while (strcmp(i->entry.key, key)) { // while i->entry.key != key
+		head = false; // why does this run every iteration lol
+		if (i->next == NULL)
+			return; // key doesn't exist
+		op = i;
+		i = i->next;
 	}
-	return NULL;
+	
+	i->entry.key = NULL; // why not?
+	i->entry.val = NULL; 
+	free(i->entry.key);
+	op->next = i->next;
+	if (!head) 
+		free(i);
+}
+
+void *ht_lookup(Ht *ht, const char *key) {
+	uint64_t hashed_key = hash(key) % (ht->cap - 1); 
+
+	HtEntryList *i = &ht->table[hashed_key];
+	while (strcmp(i->entry.key, key)) {
+		if (i->next == NULL)
+			return NULL; 
+		i = i->next;
+	}
+	return i->entry.val;
 }
