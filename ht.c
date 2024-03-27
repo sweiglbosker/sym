@@ -150,13 +150,14 @@ void *ht_lookup(Ht *ht, const char *key) {
 
 	HtEntryList *i = &ht->table[hashed_key];
 
-	if (i->entry.key == NULL) 
-		return NULL;
-
-	while (strcmp(i->entry.key, key)) {
+	while (i->entry.key) {
+		if (!strcmp(i->entry.key, key))
+			break;
 		if (i->next == NULL)
 			return NULL; 
+
 		i = i->next;
 	}
+
 	return i->entry.val;
 }
